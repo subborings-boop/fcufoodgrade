@@ -1,5 +1,6 @@
 import functools
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from app.models.user import User
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -28,7 +29,34 @@ def register():
     - POST: 接收表單欄位 (username, email, password, confirm_password)，
             檢查密碼一致性、信箱正則後綴與唯一性，成功後重導向至登入頁。
     """
-    pass
+    if 'user_id' in session:
+        return redirect(url_for('restaurant.index'))
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        # 基本驗證
+        if not username or not email or not password or not confirm_password:
+            flash('所有欄位皆為必填。', 'danger')
+            return render_template('auth/register.html', username=username, email=email)
+
+        if password != confirm_password:
+            flash('兩次密碼輸入不一致。', 'danger')
+            return render_template('auth/register.html', username=username, email=email)
+
+        try:
+            # 建立使用者
+            User.create(username, email, password)
+            flash('註冊成功，請登入！', 'success')
+            return redirect(url_for('auth.login'))
+        except ValueError as e:
+            flash(str(e), 'danger')
+            return render_template('auth/register.html', username=username, email=email)
+
+    return render_template('auth/register.html')
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -38,7 +66,30 @@ def login():
     - POST: 接收並驗證信箱與密碼，驗證成功後將 user_id 與 username 寫入 session，
             並引導重導向至首頁或原請求之 `next` 頁面。
     """
-    pass
+    if 'user_id' in session:
+        return redirect(url_for('restaurant.index'))
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+
+        if not email or not password:
+            flash('請輸入電子信箱與密碼。', 'danger')
+            return render_template('auth/login.html', email=email)
+
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            flash(f'歡迎回來，{user.username}！', 'success')
+            
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('restaurant.index'))
+        else:
+            flash('電子信箱或密碼錯誤。', 'danger')
+            return render_template('auth/login.html', email=email)
+
+    return render_template('auth/login.html')
 
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
@@ -46,4 +97,6 @@ def logout():
     登出邏輯
     - POST: 清空會話 (session.clear())，並重導向至首頁。
     """
-    pass
+    session.clear()
+    flash('您已成功登出。', 'success')
+    return redirect(url_for('restaurant.index'))

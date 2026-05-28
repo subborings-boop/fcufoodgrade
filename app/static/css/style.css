@@ -1,0 +1,407 @@
+/* style.css - 逢甲美食評論網 全域現代美學樣式 */
+
+/* 引入 Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+    /* HSL 色彩系統 */
+    --bg-main: hsl(222, 20%, 8%);
+    --bg-surface: hsla(222, 20%, 12%, 0.7);
+    --bg-surface-solid: hsl(222, 20%, 12%);
+    --bg-surface-hover: hsla(222, 20%, 18%, 0.8);
+    
+    --primary: hsl(252, 90%, 65%);
+    --primary-hover: hsl(252, 90%, 55%);
+    --accent: hsl(180, 100%, 45%);
+    --accent-hover: hsl(180, 100%, 35%);
+    
+    --text-primary: hsl(0, 0%, 95%);
+    --text-secondary: hsl(215, 15%, 70%);
+    --text-muted: hsl(215, 10%, 50%);
+    
+    --border-color: hsla(215, 20%, 25%, 0.4);
+    --border-glow: hsla(252, 90%, 65%, 0.2);
+    
+    --success: hsl(145, 80%, 45%);
+    --danger: hsl(355, 85%, 55%);
+    --warning: hsl(40, 95%, 55%);
+    
+    /* 圓角與陰影 */
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-glow: 0 0 15px var(--border-glow);
+    
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 全域重設 */
+body {
+    background-color: var(--bg-main);
+    background-image: 
+        radial-gradient(at 10% 20%, hsla(252, 90%, 65%, 0.08) 0px, transparent 50%),
+        radial-gradient(at 90% 80%, hsla(180, 100%, 45%, 0.06) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+}
+
+/* 頂級毛玻璃特效 (Glassmorphism) */
+.glass-panel {
+    background: var(--bg-surface);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+.glass-panel:hover {
+    border-color: hsla(252, 90%, 65%, 0.3);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+/* 頂級導覽列 */
+.navbar-custom {
+    background: rgba(13, 17, 23, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.navbar-brand-custom {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: var(--transition);
+}
+
+.navbar-brand-custom:hover {
+    opacity: 0.9;
+}
+
+.nav-link-custom {
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.nav-link-custom:hover, .nav-link-custom.active {
+    color: var(--text-primary);
+    background-color: var(--bg-surface-hover);
+}
+
+/* 精美按鈕樣式 */
+.btn-primary-custom {
+    background: linear-gradient(135deg, var(--primary) 0%, hsl(265, 85%, 60%) 100%);
+    border: none;
+    color: white;
+    font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 10px rgba(110, 68, 255, 0.3);
+    transition: var(--transition);
+}
+
+.btn-primary-custom:hover {
+    background: linear-gradient(135deg, var(--primary-hover) 0%, hsl(265, 85%, 50%) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(110, 68, 255, 0.5);
+}
+
+.btn-accent-custom {
+    background: linear-gradient(135deg, var(--accent) 0%, hsl(190, 100%, 40%) 100%);
+    border: none;
+    color: #0b0f19;
+    font-weight: 600;
+    padding: 0.6rem 1.5rem;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 10px rgba(0, 240, 255, 0.2);
+    transition: var(--transition);
+}
+
+.btn-accent-custom:hover {
+    background: linear-gradient(135deg, var(--accent-hover) 0%, hsl(190, 100%, 35%) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 240, 255, 0.4);
+}
+
+.btn-outline-custom {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.btn-outline-custom:hover {
+    background: var(--bg-surface-hover);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+/* 餐廳卡片設計 */
+.restaurant-card {
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+}
+
+.restaurant-img-container {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+    background: hsl(222, 20%, 15%);
+}
+
+.restaurant-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.restaurant-card:hover .restaurant-img {
+    transform: scale(1.08);
+}
+
+.card-tag {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(13, 17, 23, 0.85);
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--accent);
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* 雙星等指標評分條 */
+.rating-pill {
+    background: hsla(252, 90%, 65%, 0.15);
+    color: hsl(252, 100%, 80%);
+    border: 1px solid hsla(252, 90%, 65%, 0.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.cp-pill {
+    background: hsla(180, 100%, 45%, 0.15);
+    color: hsl(180, 100%, 80%);
+    border: 1px solid hsla(180, 100%, 45%, 0.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* 標籤徽章 (Badges) */
+.tag-badge {
+    background: var(--bg-surface-hover);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    display: inline-block;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.tag-badge:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.tag-badge.selected {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--border-glow);
+}
+
+/* 輸入框設計 */
+.form-control-custom {
+    background: var(--bg-surface-hover);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    transition: var(--transition);
+}
+
+.form-control-custom:focus {
+    background: var(--bg-surface-solid);
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--border-glow);
+    color: var(--text-primary);
+    outline: none;
+}
+
+/* 篩選邊欄 */
+.filter-section {
+    padding: 20px;
+    position: sticky;
+    top: 90px;
+}
+
+/* 頁腳 */
+.footer-custom {
+    margin-top: auto;
+    background: hsl(222, 20%, 5%);
+    border-top: 1px solid var(--border-color);
+    padding: 2rem 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* 評論項 (Review item) */
+.review-item {
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 0;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+/* 二級回覆區 */
+.replies-container {
+    background: hsla(222, 20%, 6%, 0.6);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 12px 16px;
+    margin-top: 12px;
+}
+
+/* 口袋名單頁面 Tab 切換 */
+.favorite-tabs {
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+}
+
+.fav-tab-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: var(--transition);
+}
+
+.fav-tab-link:hover {
+    color: var(--text-primary);
+    background: var(--bg-surface-hover);
+}
+
+.fav-tab-link.active {
+    color: white;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--border-glow);
+}
+
+/* 評價星等選擇器 (Radio group stars) */
+.star-rating-select {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.star-rating-select input {
+    display: none;
+}
+
+.star-rating-select label {
+    font-size: 1.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.star-rating-select label:hover,
+.star-rating-select label:hover ~ label,
+.star-rating-select input:checked ~ label {
+    color: var(--warning);
+}
+
+/* Flash 彈窗設計 */
+.alert-custom {
+    background: var(--bg-surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    animation: slideIn 0.3s ease forwards;
+}
+
+.alert-success-custom {
+    border-left: 4px solid var(--success);
+}
+
+.alert-danger-custom {
+    border-left: 4px solid var(--danger);
+}
+
+.alert-warning-custom {
+    border-left: 4px solid var(--warning);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

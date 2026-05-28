@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}餐廳搜尋 - 逢甲美食評論網{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- 左側篩選面板 -->
+    <div class="col-lg-3">
+        <div class="glass-panel filter-section">
+            <h4 class="mb-4 text-light"><i class="bi bi-funnel me-2 text-primary"></i>進階篩選</h4>
+            
+            <form action="{{ url_for('restaurant.list_restaurants') }}" method="GET" id="filter-form">
+                <!-- 關鍵字搜尋 -->
+                <div class="mb-4">
+                    <label for="query" class="form-label text-secondary fw-semibold">餐廳名稱或地址</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-custom" id="query" name="query" value="{{ current_query }}" placeholder="搜尋例如：蛋餅、義大利麵...">
+                    </div>
+                </div>
+
+                <!-- 區域地標篩選 -->
+                <div class="mb-4">
+                    <label class="form-label text-secondary fw-semibold">地理校區位置</label>
+                    <select class="form-select form-control-custom" name="landmark">
+                        <option value="">全部校區位置</option>
+                        {% for lm in landmarks %}
+                            <option value="{{ lm }}" {% if current_landmark == lm %}selected{% endif %}>{{ lm }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- 學生痛點標籤篩選 -->
+                <div class="mb-4">
+                    <label class="form-label text-secondary fw-semibold">學生痛點標籤 (多選)</label>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        {% for tag in tags %}
+                            <div class="tag-checkbox">
+                                <input type="checkbox" name="tags" value="{{ tag.name }}" id="tag-{{ tag.id }}" class="btn-check" {% if tag.name in selected_tags %}checked{% endif %}>
+                                <label class="btn btn-sm btn-outline-custom rounded-pill px-3 py-1 text-nowrap {% if tag.name in selected_tags %}selected{% endif %}" for="tag-{{ tag.id }}">
+                                    {{ tag.name }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary-custom py-2">
+                        <i class="bi bi-search me-1"></i>套用篩選
+                    </button>
+                    <a href="{{ url_for('restaurant.list_restaurants') }}" class="btn btn-outline-custom py-2 text-center text-decoration-none">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>重設條件
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 右側餐廳列表 -->
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="m-0 text-light fw-bold">
+                {% if current_query or current_landmark or selected_tags %}
+                    篩選結果
+                {% else %}
+                    熱門與推薦餐廳
+                {% endif %}
+                <span class="fs-6 text-secondary fw-normal ms-2">共 {{ restaurants|length }} 家餐廳</span>
+            </h3>
+        </div>
+
+        {% if restaurants %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                {% for r in restaurants %}
+                    <div class="col">
+                        <div class="glass-panel restaurant-card h-100 d-flex flex-column">
+                            <!-- 餐廳首圖 -->
+                            <div class="restaurant-img-container">
+                                <!-- 以精緻漸層取代 Placeholders 圖片，並顯示餐廳首字母 -->
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center" 
+                                     style="background: linear-gradient(135deg, hsl({{ (r.id * 50) % 360 }}, 60%, 25%) 0%, hsl({{ (r.id * 50 + 120) % 360 }}, 60%, 15%) 100%);">
+                                    <span class="display-3 fw-bold text-light opacity-50">{{ r.name[0] }}</span>
+                                </div>
+                                <span class="card-tag"><i class="bi bi-geo-alt-fill me-1"></i>{{ r.landmark }}</span>
+                            </div>
+
+                            <!-- 餐廳內容 -->
+                            <div class="card-body p-4 d-flex flex-column flex-grow-1">
+                                <h4 class="card-title text-light mb-3 text-truncate">{{ r.name }}</h4>
+                                
+                                <!-- 評分資訊 -->
+                                <div class="d-flex gap-2 mb-3">
+                                    <span class="rating-pill">
+                                        <i class="bi bi-star-fill text-warning me-1"></i>美味 {{ r.avg_rating }}
+                                    </span>
+                                    <span class="cp-pill">
+                                        <i class="bi bi-currency-dollar me-1"></i>CP值 {{ r.avg_cp }}
+                                    </span>
+                                </div>
+
+                                <!-- 餐廳地址 -->
+                                <p class="text-secondary small mb-3 text-truncate">
+                                    <i class="bi bi-map me-1"></i>{{ r.address }}
+                                </p>
+
+                                <!-- 標籤列表 -->
+                                <div class="mb-4 flex-wrap d-flex">
+                                    {% if r.tags %}
+                                        {% for t in r.tags %}
+                                            <span class="tag-badge">{{ t.name }}</span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted small">暫無標籤</span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- 按鈕與收藏 -->
+                                <div class="mt-auto d-flex align-items-center justify-content-between pt-3 border-top border-secondary border-opacity-10">
+                                    <a href="{{ url_for('restaurant.detail', id=r.id) }}" class="btn btn-accent-custom py-2 px-4">
+                                        查看詳情 <i class="bi bi-arrow-right-short ms-1"></i>
+                                    </a>
+                                    
+                                    {% if session.get('user_id') %}
+                                        <!-- 已登入：使用 JavaScript toggle AJAX -->
+                                        {% set is_fav = false %}
+                                        <!-- 這裡需判斷該餐廳是否在收藏清單中，最簡單的方法是在路由傳遞 is_favorited_dict，或是藉由 Favorites 關聯 -->
+                                        <!-- 此處先藉由 FavButtons 自我處理與 AJAX 回應 -->
+                                        <button class="btn btn-outline-custom btn-toggle-favorite border-0 px-2 py-2 fs-4" 
+                                                data-restaurant-id="{{ r.id }}" 
+                                                data-list-name="我的最愛"
+                                                title="加入/取消收藏">
+                                            <!-- 我們可以使用 AJAX 獲取狀態或是用 CSS 來顯示已收藏，為了最完美體驗，我們藉由後端關聯來判斷 -->
+                                            <!-- 由於首頁與篩選列表可能有多筆，我們可以使用 r.favorites 是否包含 user_id 來快速判斷 -->
+                                            {% set user_id = session.get('user_id') %}
+                                            {% set is_user_fav = false %}
+                                            {% for fav in r.favorites %}
+                                                {% if fav.user_id == user_id %}
+                                                    {% set is_user_fav = true %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if is_user_fav %}
+                                                <i class="bi bi-heart-fill text-danger"></i>
+                                            {% else %}
+                                                <i class="bi bi-heart text-secondary"></i>
+                                            {% endif %}
+                                        </button>
+                                    {% else %}
+                                        <!-- 未登入：重導向至登入頁 -->
+                                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-custom border-0 px-2 py-2 fs-4" title="登入以收藏">
+                                            <i class="bi bi-heart text-secondary"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- 空狀態 -->
+            <div class="glass-panel text-center py-5 my-4">
+                <i class="bi bi-search fs-1 text-muted"></i>
+                <h4 class="text-secondary mt-3">找不到符合條件的餐廳</h4>
+                <p class="text-muted">請嘗試調整您的篩選條件或重新搜尋關鍵字。</p>
+                <a href="{{ url_for('restaurant.list_restaurants') }}" class="btn btn-primary-custom mt-3">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>顯示全部餐廳
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 更新篩選標籤按鈕的外觀
+    const checkLabels = document.querySelectorAll('.tag-checkbox label');
+    checkLabels.forEach(label => {
+        const checkbox = document.getElementById(label.getAttribute('for'));
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                label.classList.add('selected');
+            } else {
+                label.classList.remove('selected');
+            }
+        });
+    });
+</script>
+{% endblock %}

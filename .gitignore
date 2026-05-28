@@ -1,0 +1,19 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Flask instance folder (contains database.db)
+instance/
+
+# OS/IDE specific files
+.DS_Store
+.vscode/
+.idea/
+*.db
