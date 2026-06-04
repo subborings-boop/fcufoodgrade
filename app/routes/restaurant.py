@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, abort, session
+from flask import Blueprint, render_template, request, abort, session, redirect, url_for, flash
 from app.models.restaurant import Restaurant, Tag
 from app.models.review import Review, ReviewLike
 from app.models.favorite import Favorite
+from app.routes.auth import login_required
 
 restaurant_bp = Blueprint('restaurant', __name__)
 
@@ -91,4 +92,51 @@ def detail(id):
         is_favorited=is_favorited,
         liked_review_ids=liked_review_ids,
         user_lists=user_lists
+    )
+
+@restaurant_bp.route('/restaurants/new', methods=['GET', 'POST'])
+@login_required
+def new_restaurant():
+    """
+    新增店家頁面與邏輯
+    - GET: 渲染新增店家表單 templates/restaurant/new.html，傳遞 landmarks 與 tags。
+    - POST: 接收表單資料，驗證必填欄位，呼叫 Restaurant.create 寫入資料庫，並重導向回新店家詳細頁。
+    """
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        address = request.form.get('address', '').strip()
+        phone = request.form.get('phone', '').strip() or None
+        opening_hours = request.form.get('opening_hours', '').strip() or None
+        landmark = request.form.get('landmark', '').strip()
+        selected_tags = request.form.getlist('tags')
+
+        # 基本欄位驗證
+        if not name or not address or not landmark:
+            flash('請填寫店家名稱、地址與所在的校區位置。', 'danger')
+            return redirect(url_for('restaurant.new_restaurant'))
+
+        if landmark not in LANDMARKS:
+            flash('請選擇有效的地理校區位置。', 'danger')
+            return redirect(url_for('restaurant.new_restaurant'))
+
+        try:
+            new_r = Restaurant.create(
+                name=name,
+                address=address,
+                phone=phone,
+                opening_hours=opening_hours,
+                landmark=landmark,
+                tag_names=selected_tags
+            )
+            flash(f'已成功新增店家「{new_r.name}」！', 'success')
+            return redirect(url_for('restaurant.detail', id=new_r.id))
+        except Exception as e:
+            flash(f'新增店家失敗：{str(e)}', 'danger')
+            return redirect(url_for('restaurant.new_restaurant'))
+
+    all_tags = Tag.get_all()
+    return render_template(
+        'restaurant/new.html',
+        landmarks=LANDMARKS,
+        tags=all_tags
     )

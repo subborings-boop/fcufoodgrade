@@ -189,5 +189,57 @@ class TestFCUFoodGrade(unittest.TestCase):
         }, follow_redirects=True)
         self.assertIn('大一聚餐名單'.encode('utf-8'), response.data)
 
+    def test_create_restaurant_flow(self):
+        """
+        6. 測試新增店家流程
+        """
+        # 未登入時造訪，應重新導向至登入頁面
+        response = self.client.get('/restaurants/new')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/auth/login', response.headers['Location'])
+
+        # 未登入時 POST 提交，應拒絕並重導向
+        response = self.client.post('/restaurants/new', data={
+            'name': '新店家',
+            'address': '逢甲路200號',
+            'landmark': '正門'
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # 登入測試帳號
+        self.client.post('/auth/login', data={
+            'email': 'd1112223@mail.fcu.edu.tw',
+            'password': 'password123'
+        })
+
+        # 登入後造訪新增店家頁面應成功
+        response = self.client.get('/restaurants/new')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('新增逢甲周邊店家'.encode('utf-8'), response.data)
+
+        # 登入後 POST 提交合法資料
+        response = self.client.post('/restaurants/new', data={
+            'name': '大三元便當',
+            'address': '文華路20號',
+            'phone': '04-98765432',
+            'opening_hours': '11:00 - 20:00',
+            'landmark': '文華路',
+            'tags': ['平價', '大份量']
+        }, follow_redirects=True)
+        
+        # 驗證是否重導向至新店家的詳細資訊頁，且包含店家資訊
+        self.assertIn('大三元便當'.encode('utf-8'), response.data)
+        self.assertIn('已成功新增店家「大三元便當」'.encode('utf-8'), response.data)
+        self.assertIn('文華路'.encode('utf-8'), response.data)
+        self.assertIn('平價'.encode('utf-8'), response.data)
+        self.assertIn('大份量'.encode('utf-8'), response.data)
+
+        # POST 提交非法資料 (缺乏必填欄位)
+        response = self.client.post('/restaurants/new', data={
+            'name': '無效店家',
+            'landmark': '正門'
+        }, follow_redirects=True)
+        self.assertIn('請填寫店家名稱、地址與所在的校區位置。'.encode('utf-8'), response.data)
+
 if __name__ == '__main__':
     unittest.main()
