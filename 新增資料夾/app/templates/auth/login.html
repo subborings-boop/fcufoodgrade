@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}會員登入 - 逢甲美食評論網{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center my-5">
+    <div class="col-md-5">
+        <div class="glass-panel p-5">
+            <div class="text-center mb-4">
+                <i class="bi bi-door-open fs-1 text-primary"></i>
+                <h2 class="mt-3 text-light">逢甲人，歡迎回來</h2>
+                <p class="text-secondary">登入即可發表美食評論、按讚與管理收藏</p>
+            </div>
+            
+            <form action="{{ url_for('auth.login', next=request.args.get('next', '')) }}" method="POST">
+                <div class="mb-4">
+                    <label for="email" class="form-label text-secondary">學校信箱 (@o365.fcu.edu.tw)</label>
+                    <input type="email" class="form-control form-control-custom" id="email" name="email" value="{{ email or '' }}" placeholder="example@o365.fcu.edu.tw" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="password" class="form-label text-secondary">密碼</label>
+                    <input type="password" class="form-control form-control-custom" id="password" name="password" placeholder="請輸入密碼" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary-custom w-100 py-3 mt-2">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>登入
+                </button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <span class="text-secondary">還沒有帳號嗎？</span>
+                <a href="{{ url_for('auth.register') }}" class="text-accent text-decoration-none fw-semibold">立即註冊 <i class="bi bi-arrow-right-short"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

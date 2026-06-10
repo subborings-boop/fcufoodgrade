@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}學生註冊 - 逢甲美食評論網{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center my-4">
+    <div class="col-md-6">
+        <div class="glass-panel p-5">
+            <div class="text-center mb-4">
+                <i class="bi bi-person-plus fs-1 text-accent"></i>
+                <h2 class="mt-3 text-light">加入逢甲美食指南</h2>
+                <p class="text-secondary">過濾校外觀光客，僅限逢甲大學信箱註冊驗證</p>
+            </div>
+            
+            <form action="{{ url_for('auth.register') }}" method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label text-secondary">暱稱 / 使用者名稱</label>
+                    <input type="text" class="form-control form-control-custom" id="username" name="username" value="{{ username or '' }}" placeholder="如：大一吃貨、逢甲周杰倫" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="email" class="form-label text-secondary">學校信箱 (@o365.fcu.edu.tw)</label>
+                    <input type="email" class="form-control form-control-custom" id="email" name="email" value="{{ email or '' }}" placeholder="學號@o365.fcu.edu.tw" required>
+                    <div class="form-text text-muted">本系統會自動過濾非逢甲 O365 信箱後綴的註冊。</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="password" class="form-label text-secondary">設定密碼</label>
+                        <input type="password" class="form-control form-control-custom" id="password" name="password" placeholder="請設定密碼" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="confirm_password" class="form-label text-secondary">確認密碼</label>
+                        <input type="password" class="form-control form-control-custom" id="confirm_password" name="confirm_password" placeholder="請再次輸入密碼" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-accent-custom w-100 py-3 mt-3">
+                    <i class="bi bi-person-check me-1"></i>建立逢甲驗證帳號
+                </button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <span class="text-secondary">已經有帳號了？</span>
+                <a href="{{ url_for('auth.login') }}" class="text-primary text-decoration-none fw-semibold">立即登入 <i class="bi bi-arrow-right-short"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}選擇困難救星 - 逢甲美食評論網{% endblock %}
+
+{% block styles %}
+<style>
+    /* 搖晃與發光動畫 */
+    @keyframes shuffleGlow {
+        0%, 100% {
+            box-shadow: 0 0 15px var(--border-glow);
+            transform: scale(1);
+        }
+        50% {
+            box-shadow: 0 0 35px var(--primary);
+            transform: scale(1.02);
+        }
+    }
+
+    .shuffling {
+        animation: shuffleGlow 0.3s infinite ease-in-out;
+    }
+
+    .savior-container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .mystery-card {
+        min-height: 350px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: var(--radius-lg);
+        background: var(--bg-surface);
+        backdrop-filter: blur(16px) saturate(120%);
+        border: 2px dashed var(--border-color);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .mystery-card.active-result {
+        border-style: solid;
+        border-color: var(--primary);
+        justify-content: flex-start;
+        align-items: stretch;
+        padding: 30px;
+    }
+
+    .question-mark {
+        font-size: 6rem;
+        font-family: var(--font-heading);
+        font-weight: 700;
+        color: var(--primary);
+        text-shadow: 0 0 15px var(--border-glow);
+        transition: var(--transition);
+    }
+
+    /* 隱藏原生多選，改為精美按鈕標籤 */
+    .filter-tag-check {
+        display: none;
+    }
+
+    .filter-tag-label {
+        cursor: pointer;
+        transition: var(--transition);
+        border: 1px solid var(--border-color);
+        border-radius: 30px;
+        padding: 6px 16px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        background: var(--bg-surface);
+        user-select: none;
+    }
+
+    .filter-tag-check:checked + .filter-tag-label {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        box-shadow: 0 0 10px var(--border-glow);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="savior-container my-4">
+    <!-- 標題與簡介 -->
+    <div class="glass-panel p-4 mb-4 text-center">
+        <h2 class="text-light fw-bold mb-2">
+            <i class="bi bi-magic text-accent me-2"></i>選擇困難救星
+        </h2>
+        <p class="text-secondary m-0">今天下課不知道要吃什麼？交給逢甲美食救星，隨機幫您挑選好店！</p>
+    </div>
+
+    <!-- 篩選條件 -->
+    <div class="glass-panel p-4 mb-4">
+        <h4 class="text-light mb-3 fs-5"><i class="bi bi-sliders me-2 text-primary"></i>設定篩選條件 (選填)</h4>
+        <div class="row">
+            <!-- 地區篩選 -->
+            <div class="col-md-5 mb-3">
+                <label for="landmark-filter" class="form-label text-secondary fw-semibold">地理區域</label>
+                <select id="landmark-filter" class="form-select form-control-custom">
+                    <option value="">全部區域</option>
+                    {% for lm in landmarks %}
+                        <option value="{{ lm }}">{{ lm }}周邊</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- 痛點標籤篩選 -->
+            <div class="col-md-7 mb-3">
+                <label class="form-label text-secondary fw-semibold mb-2">店家特點標籤</label>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for t in tags %}
+                        <div>
+                            <input type="checkbox" class="filter-tag-check" id="tag-{{ t.id }}" value="{{ t.name }}">
+                            <label class="filter-tag-label" for="tag-{{ t.id }}">{{ t.name }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 互動卡片 -->
+    <div class="mystery-card shuffling-container text-center mb-4" id="savior-card">
+        <!-- 初始狀態內容 -->
+        <div id="initial-state" class="py-5">
+            <div class="question-mark mb-3">?</div>
+            <h3 class="text-light fw-bold mb-2">準備抽取美食</h3>
+            <p class="text-secondary px-3">點擊下方按鈕，開始隨機抽籤</p>
+        </div>
+
+        <!-- 跑馬燈動態內容 -->
+        <div id="shuffling-state" class="d-none py-5">
+            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h2 class="text-light fw-bold" id="shuffling-text" style="font-size: 2.5rem;">地瓜球...</h2>
+            <p class="text-accent">救星挑選中，請稍候...</p>
+        </div>
+
+        <!-- 最終結果內容 -->
+        <div id="result-state" class="d-none w-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span class="badge bg-primary mb-2" id="res-landmark">區域</span>
+                    <h3 class="text-light fw-bold mb-1" id="res-name">餐廳名稱</h3>
+                </div>
+                <div class="d-flex gap-2">
+                    <span class="rating-pill" id="res-rating"><i class="bi bi-star-fill text-warning me-1"></i>0.0</span>
+                    <span class="cp-pill" id="res-cp"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>CP 0.0</span>
+                </div>
+            </div>
+
+            <!-- 標籤 -->
+            <div class="d-flex flex-wrap gap-2 mb-3" id="res-tags">
+                <!-- 動態載入標籤 -->
+            </div>
+
+            <hr class="border-secondary opacity-15 my-3">
+
+            <!-- 餐廳簡介清單 -->
+            <div class="text-start">
+                <div class="mb-2 text-secondary">
+                    <i class="bi bi-geo-alt-fill text-danger me-2"></i><strong>地址：</strong><span id="res-address">地址資訊</span>
+                </div>
+                <div class="mb-2 text-secondary" id="res-phone-container">
+                    <i class="bi bi-telephone-fill text-primary me-2"></i><strong>電話：</strong><span id="res-phone">電話資訊</span>
+                </div>
+                <div class="mb-2 text-secondary" id="res-hours-container">
+                    <i class="bi bi-clock-fill text-warning me-2"></i><strong>營業時間：</strong><span id="res-hours">營業時間資訊</span>
+                </div>
+            </div>
+
+            <div class="row g-2 mt-4">
+                <div class="col-md-6">
+                    <button class="btn btn-outline-custom w-100 py-3" id="btn-re-spin">
+                        <i class="bi bi-arrow-repeat me-1"></i>重新抽取
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <a href="#" class="btn btn-primary-custom w-100 py-3 text-white" id="res-link">
+                        <i class="bi bi-chat-right-text me-1"></i>前往查看與評論
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 啟動按鈕 -->
+    <div class="text-center" id="action-btn-container">
+        <button class="btn btn-primary-custom px-5 py-3 fs-5" id="btn-spin">
+            <i class="bi bi-magic me-1"></i>啟動救星！
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 餐廳完整資料庫
+        const allRestaurants = [
+            {% for r in restaurants %}
+                {
+                    id: {{ r.id }},
+                    name: {{ r.name | tojson }},
+                    address: {{ r.address | tojson }},
+                    phone: {{ r.phone | tojson }},
+                    opening_hours: {{ r.opening_hours | tojson }},
+                    landmark: {{ r.landmark | tojson }},
+                    avg_rating: {{ r.avg_rating }},
+                    avg_cp: {{ r.avg_cp }},
+                    tags: [
+                        {% for t in r.tags %}
+                            {{ t.name | tojson }},
+                        {% endfor %}
+                    ]
+                },
+            {% endfor %}
+        ];
+
+        const btnSpin = document.getElementById('btn-spin');
+        const btnReSpin = document.getElementById('btn-re-spin');
+        const saviorCard = document.getElementById('savior-card');
+        
+        const stateInitial = document.getElementById('initial-state');
+        const stateShuffling = document.getElementById('shuffling-state');
+        const stateResult = document.getElementById('result-state');
+        
+        const shufflingText = document.getElementById('shuffling-text');
+        
+        // 篩選 DOM
+        const landmarkFilter = document.getElementById('landmark-filter');
+        
+        // 啟動抽籤
+        if (btnSpin) btnSpin.addEventListener('click', startSpin);
+        if (btnReSpin) btnReSpin.addEventListener('click', startSpin);
+
+        function startSpin() {
+            // 獲取目前篩選條件
+            const selectedLandmark = landmarkFilter.value;
+            const selectedTags = Array.from(document.querySelectorAll('.filter-tag-check:checked')).map(el => el.value);
+
+            // 過濾資料
+            const filtered = allRestaurants.filter(r => {
+                // 地區過濾
+                if (selectedLandmark && r.landmark !== selectedLandmark) return false;
+                // 標籤過濾 (必須包含所有選取的標籤)
+                if (selectedTags.length > 0) {
+                    const hasAllTags = selectedTags.every(t => r.tags.includes(t));
+                    if (!hasAllTags) return false;
+                }
+                return true;
+            });
+
+            // 如果沒有相符餐廳
+            if (filtered.length === 0) {
+                alert('沒有符合當前篩選條件的餐廳喔！請換個條件再試試。');
+                return;
+            }
+
+            // UI 狀態切換為 Shuffling
+            stateInitial.classList.add('d-none');
+            stateResult.classList.add('d-none');
+            saviorCard.classList.remove('active-result');
+            
+            stateShuffling.classList.remove('d-none');
+            saviorCard.classList.add('shuffling');
+            btnSpin.disabled = true;
+
+            // 跑馬燈動畫 (隨機跳動顯示名稱)
+            let duration = 2000; // 2秒
+            let intervalTime = 60; // 每60毫秒換一次名稱
+            let elapsed = 0;
+            let lastIndex = -1;
+
+            const interval = setInterval(() => {
+                let randIndex;
+                do {
+                    randIndex = Math.floor(Math.random() * filtered.length);
+                } while (filtered.length > 1 && randIndex === lastIndex);
+                
+                lastIndex = randIndex;
+                shufflingText.textContent = filtered[randIndex].name;
+                elapsed += intervalTime;
+
+                if (elapsed >= duration) {
+                    clearInterval(interval);
+                    
+                    // 結束動畫，選出最終結果
+                    const winner = filtered[Math.floor(Math.random() * filtered.length)];
+                    showResult(winner);
+                }
+            }, intervalTime);
+        }
+
+        function showResult(r) {
+            // 取消 Shuffling 樣式
+            stateShuffling.classList.add('d-none');
+            saviorCard.classList.remove('shuffling');
+            btnSpin.disabled = false;
+
+            // 顯示結果
+            stateResult.classList.remove('d-none');
+            saviorCard.classList.add('active-result');
+
+            // 帶入內容
+            document.getElementById('res-name').textContent = r.name;
+            document.getElementById('res-landmark').textContent = r.landmark + '周邊';
+            document.getElementById('res-rating').innerHTML = `<i class="bi bi-star-fill text-warning me-1"></i>${r.avg_rating.toFixed(1)}`;
+            document.getElementById('res-cp').innerHTML = `<i class="bi bi-lightning-charge-fill text-warning me-1"></i>CP ${r.avg_cp.toFixed(1)}`;
+            document.getElementById('res-address').textContent = r.address;
+            
+            // 處理電話
+            const phoneContainer = document.getElementById('res-phone-container');
+            if (r.phone) {
+                document.getElementById('res-phone').textContent = r.phone;
+                phoneContainer.classList.remove('d-none');
+            } else {
+                phoneContainer.classList.add('d-none');
+            }
+
+            // 處理營業時間
+            const hoursContainer = document.getElementById('res-hours-container');
+            if (r.opening_hours) {
+                document.getElementById('res-hours').textContent = r.opening_hours;
+                hoursContainer.classList.remove('d-none');
+            } else {
+                hoursContainer.classList.add('d-none');
+            }
+
+            // 處理標籤
+            const tagsContainer = document.getElementById('res-tags');
+            tagsContainer.innerHTML = '';
+            r.tags.forEach(t => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag-badge';
+                tagEl.textContent = t;
+                tagsContainer.appendChild(tagEl);
+            });
+
+            // 前往詳情按鈕
+            document.getElementById('res-link').href = `/restaurants/${r.id}`;
+
+            // 如果有重新抽取的按鈕，隱藏首頁的主按鈕
+            document.getElementById('action-btn-container').classList.add('d-none');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}{{ restaurant.name }} - 逢甲美食評論網{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- 餐廳資訊首部橫幅 -->
+    <div class="col-12">
+        <div class="glass-panel p-5" style="background: linear-gradient(135deg, hsla(252, 90%, 65%, 0.15) 0%, hsla(180, 100%, 45%, 0.08) 100%);">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
+                <div>
+                    <span class="badge bg-primary px-3 py-2 mb-2"><i class="bi bi-geo-alt-fill me-1"></i>{{ restaurant.landmark }}周區</span>
+                    <h1 class="display-5 text-light fw-bold mb-3">{{ restaurant.name }}</h1>
+                    
+                    <!-- 雙星評分 -->
+                    <div class="d-flex gap-3 align-items-center mb-3">
+                        <span class="rating-pill px-3 py-2 fs-5">
+                            <i class="bi bi-star-fill text-warning me-2"></i>美味度 {{ restaurant.avg_rating }}
+                        </span>
+                        <span class="cp-pill px-3 py-2 fs-5">
+                            <i class="bi bi-currency-dollar me-1"></i>CP值性價比 {{ restaurant.avg_cp }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 收藏按鈕組 -->
+                <div>
+                    {% if session.get('user_id') %}
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-accent-custom btn-toggle-favorite py-3 px-4 d-flex align-items-center" data-restaurant-id="{{ restaurant.id }}">
+                                <i class="bi {% if is_favorited %}bi-heart-fill text-danger{% else %}bi-heart{% endif %} me-2"></i>
+                                <span class="fav-text">{% if is_favorited %}已收藏{% else %}加入收藏{% endif %}</span>
+                            </button>
+                            
+                            <!-- 自訂口袋名單按鈕（觸發彈窗） -->
+                            <button class="btn btn-outline-custom py-3 px-3" data-bs-toggle="modal" data-bs-target="#customListModal" title="加入自訂口袋名單">
+                                <i class="bi bi-folder-plus fs-5"></i>
+                            </button>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-accent-custom py-3 px-4">
+                            <i class="bi bi-heart me-2"></i>登入以加入收藏
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 左側：餐廳基本資訊 + 發表評論表單 -->
+    <div class="col-lg-4">
+        <div class="glass-panel p-4 mb-4">
+            <h3 class="mb-4 text-light"><i class="bi bi-info-circle text-primary me-2"></i>餐廳資訊</h3>
+            
+            <ul class="list-unstyled mb-0">
+                <li class="mb-3 d-flex align-items-start">
+                    <i class="bi bi-map-fill text-accent me-3 mt-1 fs-5"></i>
+                    <div>
+                        <strong class="text-light d-block mb-1">地址</strong>
+                        <span class="text-secondary">{{ restaurant.address }}</span>
+                    </div>
+                </li>
+                <li class="mb-3 d-flex align-items-start">
+                    <i class="bi bi-telephone-fill text-accent me-3 mt-1 fs-5"></i>
+                    <div>
+                        <strong class="text-light d-block mb-1">聯絡電話</strong>
+                        <span class="text-secondary">{{ restaurant.phone or '暫無資訊' }}</span>
+                    </div>
+                </li>
+                <li class="mb-3 d-flex align-items-start">
+                    <i class="bi bi-clock-fill text-accent me-3 mt-1 fs-5"></i>
+                    <div>
+                        <strong class="text-light d-block mb-1">營業時間</strong>
+                        <span class="text-secondary">{{ restaurant.opening_hours or '暫無資訊' }}</span>
+                    </div>
+                </li>
+                <li class="d-flex align-items-start">
+                    <i class="bi bi-tags-fill text-accent me-3 mt-1 fs-5"></i>
+                    <div>
+                        <strong class="text-light d-block mb-1">餐廳標籤</strong>
+                        <div class="mt-2">
+                            {% for tag in restaurant.tags %}
+                                <span class="tag-badge m-0 me-1 mb-1">{{ tag.name }}</span>
+                            {% else %}
+                                <span class="text-muted small">暫無標籤</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 發表評論區 -->
+        <div class="glass-panel p-4">
+            <h3 class="mb-4 text-light"><i class="bi bi-pencil-square text-primary me-2"></i>發表食記評論</h3>
+            
+            {% if session.get('user_id') %}
+                <form action="{{ url_for('review.create_review', id=restaurant.id) }}" method="POST">
+                    <!-- 美味星等 -->
+                    <div class="mb-3">
+                        <label class="form-label text-secondary d-block fw-semibold">美味度評分</label>
+                        <div class="star-rating-select">
+                            <input type="radio" name="rating" id="star-delicious-5" value="5" required><label for="star-delicious-5">★</label>
+                            <input type="radio" name="rating" id="star-delicious-4" value="4"><label for="star-delicious-4">★</label>
+                            <input type="radio" name="rating" id="star-delicious-3" value="3"><label for="star-delicious-3">★</label>
+                            <input type="radio" name="rating" id="star-delicious-2" value="2"><label for="star-delicious-2">★</label>
+                            <input type="radio" name="rating" id="star-delicious-1" value="1"><label for="star-delicious-1">★</label>
+                        </div>
+                    </div>
+
+                    <!-- CP值星等 -->
+                    <div class="mb-3">
+                        <label class="form-label text-secondary d-block fw-semibold">CP 值 (性價比)</label>
+                        <div class="star-rating-select">
+                            <input type="radio" name="cp_rating" id="star-cp-5" value="5" required><label for="star-cp-5">★</label>
+                            <input type="radio" name="cp_rating" id="star-cp-4" value="4"><label for="star-cp-4">★</label>
+                            <input type="radio" name="cp_rating" id="star-cp-3" value="3"><label for="star-cp-3">★</label>
+                            <input type="radio" name="cp_rating" id="star-cp-2" value="2"><label for="star-cp-2">★</label>
+                            <input type="radio" name="cp_rating" id="star-cp-1" value="1"><label for="star-cp-1">★</label>
+                        </div>
+                    </div>
+
+                    <!-- 評論內容 -->
+                    <div class="mb-4">
+                        <label for="content" class="form-label text-secondary fw-semibold">用餐心得與分享</label>
+                        <textarea class="form-control form-control-custom" id="content" name="content" rows="4" placeholder="分享這家店的招牌菜、有沒有插座、適不適合讀書或聚餐..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-3">
+                        <i class="bi bi-send me-1"></i>提交美食評論
+                    </button>
+                </form>
+            {% else %}
+                <div class="text-center py-4">
+                    <p class="text-secondary mb-3">想要為這家餐廳評分或寫心得嗎？</p>
+                    <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-outline-custom">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>登入發表評論
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 右側：學生真實評論列表 -->
+    <div class="col-lg-8">
+        <div class="glass-panel p-4 h-100">
+            <h3 class="mb-4 text-light pb-3 border-bottom border-secondary border-opacity-10">
+                <i class="bi bi-chat-text text-primary me-2"></i>學生真實評價
+                <span class="fs-6 text-secondary fw-normal ms-2">共 {{ reviews|length }} 筆評論</span>
+            </h3>
+
+            {% if reviews %}
+                <div class="reviews-list">
+                    {% for rev in reviews %}
+                        <div class="review-item">
+                            <!-- 評論者資訊與星等 -->
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <strong class="text-light d-block">{{ rev.author.username }}</strong>
+                                    <span class="text-muted small"><i class="bi bi-clock me-1"></i>{{ rev.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                </div>
+                                <div class="text-end">
+                                    <div class="mb-1">
+                                        <span class="text-secondary small me-2">美味度</span>
+                                        {% for i in range(1, 6) %}
+                                            {% if rev.rating >= i %}
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            {% else %}
+                                                <i class="bi bi-star text-secondary opacity-30"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div>
+                                        <span class="text-secondary small me-2">CP值</span>
+                                        {% for i in range(1, 6) %}
+                                            {% if rev.cp_rating >= i %}
+                                                <i class="bi bi-star-fill text-accent"></i>
+                                            {% else %}
+                                                <i class="bi bi-star text-secondary opacity-30"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 評論內文 -->
+                            <div class="review-content text-light mb-3" style="line-height: 1.6; white-space: pre-line;">
+                                {{ rev.content }}
+                            </div>
+
+                            <!-- 按讚有用與回覆按鈕 -->
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                {% if session.get('user_id') %}
+                                    <button class="btn btn-sm btn-like-review d-flex align-items-center {% if rev.id in liked_review_ids %}btn-primary-custom liked{% else %}btn-outline-custom{% endif %}" 
+                                            data-review-id="{{ rev.id }}">
+                                        <i class="bi bi-hand-thumbs-up-fill me-1"></i> 這篇有用 
+                                        (<span class="like-count">{{ rev.likes|length }}</span>)
+                                    </button>
+                                {% else %}
+                                    <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-custom d-flex align-items-center">
+                                        <i class="bi bi-hand-thumbs-up-fill me-1"></i> 這篇有用 
+                                        ({{ rev.likes|length }})
+                                    </a>
+                                {% endif %}
+                                
+                                {% if session.get('user_id') %}
+                                    <button class="btn btn-sm btn-outline-custom d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#replyForm-{{ rev.id }}">
+                                        <i class="bi bi-reply-fill me-1"></i> 回覆留言
+                                    </button>
+                                {% endif %}
+                            </div>
+
+                            <!-- 二級回覆列表 -->
+                            {% if rev.replies %}
+                                <div class="replies-container">
+                                    {% for rep in rev.replies %}
+                                        <div class="reply-item mb-2 pb-2 border-bottom border-secondary border-opacity-10 {% if loop.last %}border-bottom-0 pb-0 mb-0{% endif %}">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <strong class="text-accent small"><i class="bi bi-chat-dots-fill me-1"></i>{{ rep.author.username }}</strong>
+                                                <span class="text-muted small" style="font-size: 0.75rem;">{{ rep.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                            </div>
+                                            <p class="text-secondary m-0 small" style="line-height: 1.4;">{{ rep.content }}</p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <!-- 二級回覆輸入框 (折疊) -->
+                            {% if session.get('user_id') %}
+                                <div class="collapse mt-3" id="replyForm-{{ rev.id }}">
+                                    <form action="{{ url_for('review.create_reply', review_id=rev.id) }}" method="POST">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control form-control-custom py-2" name="content" placeholder="輸入您的回覆留言..." required>
+                                            <button type="submit" class="btn btn-primary-custom px-3">送出</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-chat-square-dots fs-1 text-muted"></i>
+                    <p class="text-secondary mt-3">目前這家店還沒有評價，快來當第一個發表評價的逢甲人吧！</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 自訂口袋名單彈窗 (Bootstrap Modal) -->
+{% if session.get('user_id') %}
+<div class="modal fade" id="customListModal" tabindex="-1" aria-labelledby="customListModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel p-4" style="background-color: var(--bg-surface-solid); border: 1px solid var(--border-color);">
+            <div class="modal-header border-0 p-0 mb-3 justify-content-between">
+                <h5 class="modal-title text-light" id="customListModalLabel"><i class="bi bi-folder-plus text-primary me-2"></i>加入口袋名單</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-0">
+                <!-- 1. 選擇已有清單收藏 -->
+                {% if user_lists %}
+                    <p class="text-secondary small">選擇您現有的口袋名單：</p>
+                    <div class="list-group mb-4">
+                        {% for list_name in user_lists %}
+                            <!-- 檢查是否已在此清單 -->
+                            {% set is_in_list = false %}
+                            <!-- 由於後端有 Favorites，可判斷 user.favorites 篩選 list_name & restaurant_id -->
+                            <!-- 為簡化前端，我們使用 Form POST 來進行加入 -->
+                            <form action="{{ url_for('favorite.create_custom_list') }}" method="POST" class="m-0">
+                                <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
+                                <input type="hidden" name="list_name" value="{{ list_name }}">
+                                <button type="submit" class="list-group-item list-group-item-action bg-transparent text-secondary border-secondary border-opacity-10 d-flex justify-content-between align-items-center py-3">
+                                    <span><i class="bi bi-folder2-open me-2 text-accent"></i>{{ list_name }}</span>
+                                    <span class="badge bg-secondary rounded-pill">加入</span>
+                                </button>
+                            </form>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- 2. 新建自訂口袋名單 -->
+                <p class="text-secondary small mt-3">建立新的自訂分類口袋名單：</p>
+                <form action="{{ url_for('favorite.create_custom_list') }}" method="POST">
+                    <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-custom" name="list_name" placeholder="例如：期末歐趴糖、系聚備選、宵夜首選..." required>
+                        <button type="submit" class="btn btn-primary-custom px-4">建立並加入</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
